@@ -58,7 +58,6 @@ labels_task2_merged = {
 }
 
 
-
 class CrisisMMDataset(BaseDataset):
 
     def read_data(self, ann_file):
@@ -94,13 +93,14 @@ class CrisisMMDataset(BaseDataset):
             sentence), padding='max_length', max_length=40, truncation=True).items()
         return {k: torch.tensor(v) for k, v in ids}
 
-    def initialize(self, opt, phase='train', cat='all', task='task2', shuffle=False):
+    def initialize(self, opt, phase='train', cat='all', task='task2', shuffle=False, no_transform=False):
         self.opt = opt
         self.shuffle = shuffle
 
         self.dataset_root = f'{dataroot}/CrisisMMD_v2.0_toy' if opt.debug else f'{dataroot}/CrisisMMD_v2.0'
         self.image_root = f'{self.dataset_root}/data_image'
         self.label_map = None
+        self.no_transform = no_transform
         if task == 'task1':
             self.label_map = labels_task1
         elif task == 'task2':
@@ -126,22 +126,28 @@ class CrisisMMDataset(BaseDataset):
 
         self.to_tensor = transforms.ToTensor()
         self.normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        if self.no_transform:
+            self.transforms = transforms.Compose([
+                transforms.Resize((opt.load_size, opt.load_size)),
+                transforms.ToTensor(),
+            ])
 
-        self.transforms = transforms.Compose([
-            # transforms.Lambda(lambda img: __scale_shortside(img, opt.load_size, opt.crop_size, Image.BICUBIC)),
-            # transforms.Lambda(lambda img: scale_shortside(
-            #     img, opt.load_size, opt.crop_size, Image.BICUBIC)),
-            transforms.Lambda(lambda img: expand2square(img)),
-            transforms.Resize((opt.load_size, opt.load_size)),
-            transforms.RandomHorizontalFlip(0.2),
-            transforms.RandomGrayscale(0.1),
-            transforms.RandomAffine(20),
-            transforms.RandomCrop((opt.crop_size, opt.crop_size)),
-            transforms.ToTensor(),
-            transforms.ColorJitter(
-                brightness=0.01, contrast=0.01, saturation=0.01, hue=0.01),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-        ])
+        else:
+            self.transforms = transforms.Compose([
+                # transforms.Lambda(lambda img: __scale_shortside(img, opt.load_size, opt.crop_size, Image.BICUBIC)),
+                # transforms.Lambda(lambda img: scale_shortside(
+                #     img, opt.load_size, opt.crop_size, Image.BICUBIC)),
+                transforms.Lambda(lambda img: expand2square(img)),
+                transforms.Resize((opt.load_size, opt.load_size)),
+                transforms.RandomHorizontalFlip(0.2),
+                transforms.RandomGrayscale(0.1),
+                transforms.RandomAffine(20),
+                transforms.RandomCrop((opt.crop_size, opt.crop_size)),
+                transforms.ToTensor(),
+                transforms.ColorJitter(
+                    brightness=0.01, contrast=0.01, saturation=0.01, hue=0.01),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ])
 
     def __getitem__(self, index):
         data = self.data_list[index]

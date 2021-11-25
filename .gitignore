@@ -1,5 +1,6 @@
 __pycache__
 experiment.ipynb
+exp-lib.ipynb
 datasets/*
 results
 misclass

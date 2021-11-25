@@ -4,6 +4,14 @@ import argparse
 def get_args():
     parser = argparse.ArgumentParser()
 
+    # data processing
+    parser.add_argument('--load_size', default=250, type=int)
+    parser.add_argument('--crop_size', default=224, type=int)
+    parser.add_argument('--max_dataset_size', default=2147483648, type=int)
+
+    # System configs
+    parser.add_argument('--device', default='cuda')
+    parser.add_argument('--num_workers', default=0, type=int)
 
     # -------------- Important configs --------------- #
     parser.add_argument('--mode', choices=['both', 'image_only', 'text_only'])
@@ -21,11 +29,10 @@ def get_args():
     parser.add_argument('--pv0', default=0.3, type=float)
     parser.add_argument('--pt0', default=0.7, type=float)
 
-    # Loading model 
+    # Loading model
     parser.add_argument('--model_to_load', default='')
     parser.add_argument('--image_model_to_load', default='')
     parser.add_argument('--text_model_to_load', default='')
-
 
     parser.add_argument('--max_iter', default=300, type=int)
 
@@ -37,16 +44,25 @@ def get_args():
     parser.add_argument('--eval', action='store_true')
     parser.add_argument('--use_tensorboard', action='store_true')
 
+    return parser.parse_args()
+
+
+def get_preclassify_args():
+    parser = argparse.ArgumentParser()
+
+    # data processing
+    parser.add_argument('--load_size', default=224, type=int)
+    parser.add_argument('--crop_size', default=224, type=int)
+    parser.add_argument('--max_dataset_size', default=2147483648, type=int)
+
     # System configs
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--num_workers', default=0, type=int)
 
+    # Save dir
+    parser.add_argument('--save_dir', type=str, default='./extra')
 
-    # data processing
-    parser.add_argument('--load_size', default=250, type=int)
-    parser.add_argument('--crop_size', default=224, type=int)
-    parser.add_argument('--max_dataset_size', default=2147483648, type=int)
+    parser.add_argument('--task', choices=['task1', 'task2', 'task2_merged'])
+    parser.add_argument('--debug', action='store_true')
 
-
-    
     return parser.parse_args()
