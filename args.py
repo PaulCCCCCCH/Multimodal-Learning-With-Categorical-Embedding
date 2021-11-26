@@ -5,7 +5,7 @@ def get_args():
     parser = argparse.ArgumentParser()
 
     # data processing
-    parser.add_argument('--load_size', default=250, type=int)
+    parser.add_argument('--load_size', default=230, type=int)
     parser.add_argument('--crop_size', default=224, type=int)
     parser.add_argument('--max_dataset_size', default=2147483648, type=int)
 
@@ -51,7 +51,7 @@ def get_preclassify_args():
     parser = argparse.ArgumentParser()
 
     # data processing
-    parser.add_argument('--load_size', default=224, type=int)
+    parser.add_argument('--load_size', default=230, type=int)
     parser.add_argument('--crop_size', default=224, type=int)
     parser.add_argument('--max_dataset_size', default=2147483648, type=int)
 

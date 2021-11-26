@@ -42,7 +42,7 @@ class TextOnlyModel(BaseModel):
         self.linear = nn.Linear(dim_text_repr, num_class)
 
     def forward(self, x):
-        _, text = x
+        _, text, _ = x
 
         hidden_states = self.textEncoder(**text)  # N, T, dim_text_repr
         e_i = self.dropout(hidden_states[1])  # N, dim_text_repr
@@ -61,7 +61,7 @@ class ImageOnlyModel(BaseModel):
         self.dropout = nn.Dropout()
 
     def forward(self, x):
-        image, _ = x
+        image, _, _ = x
 
         f_i = self.dropout(self.flatten_vis(self.imageEncoder(image)))
 
@@ -69,12 +69,12 @@ class ImageOnlyModel(BaseModel):
 
 
 class DenseNetBertMMModel(MMModel):
-    def __init__(self, save_dir, dim_visual_repr=1000, dim_text_repr=768, dim_proj=100, num_class=2):
+    def __init__(self, save_dir, dim_visual_repr=1000, dim_text_repr=768, dim_cate_repr=152, dim_proj=100, num_class=2):
         self.save_dir = save_dir
 
         self.dim_visual_repr = dim_visual_repr
         self.dim_text_repr = dim_text_repr
-        self.dropout = Dropout()
+        self.dim_cate_repr = dim_cate_repr
 
         # DenseNet: https://pytorch.org/hub/pytorch_vision_densenet/
         # The authors did not mention which one they used.
@@ -89,7 +89,10 @@ class DenseNetBertMMModel(MMModel):
         config = BertConfig()
         textEncoder = BertModel(config).from_pretrained('bert-base-uncased')
 
-        super(DenseNetBertMMModel, self).__init__(imageEncoder, textEncoder, save_dir)
+        super(DenseNetBertMMModel, self).__init__(
+            imageEncoder, textEncoder, save_dir)
+
+        self.dropout = Dropout()
 
         # Flatten image features to 1D array
         self.flatten_vis = torch.nn.Flatten()
@@ -97,9 +100,11 @@ class DenseNetBertMMModel(MMModel):
         # Linear layers used to project embeddings to fixed dimension (eqn. 3)
         self.proj_visual = nn.Linear(dim_visual_repr, dim_proj)
         self.proj_text = nn.Linear(dim_text_repr, dim_proj)
+        self.proj_cate = nn.Linear(dim_cate_repr, dim_proj)
 
         self.proj_visual_bn = nn.BatchNorm1d(dim_proj)
         self.proj_text_bn = nn.BatchNorm1d(dim_proj)
+        self.proj_cate_bn = nn.BatchNorm1d(dim_proj)
 
         # Linear layers to produce attention masks (eqn. 4)
         self.layer_attn_visual = nn.Linear(dim_visual_repr, dim_proj)
@@ -108,14 +113,14 @@ class DenseNetBertMMModel(MMModel):
         # An extra fully-connected layer for classification
         # The authors wrote "we add self-attention in the fully-connected networks"
         # Here it is assumed that they mean 'we added a fully-connected layer as self-attention'.
-        self.fc_as_self_attn = nn.Linear(2*dim_proj, 2*dim_proj)
-        self.self_attn_bn = nn.BatchNorm1d(2*dim_proj)
+        self.fc_as_self_attn = nn.Linear(3*dim_proj, 3*dim_proj)
+        self.self_attn_bn = nn.BatchNorm1d(3*dim_proj)
 
         # Classification layer
-        self.cls_layer = nn.Linear(2*dim_proj, num_class)
+        self.cls_layer = nn.Linear(3*dim_proj, num_class)
 
     def forward(self, x):
-        image, text = x
+        image, text, cate = x
 
         # Getting feature map (eqn. 1)
         # N, dim_visual_repr
@@ -143,7 +148,10 @@ class DenseNetBertMMModel(MMModel):
         # The authors concatenated masked embeddings to get a joint representation
         masked_v_i = torch.multiply(alpha_v_i, f_i_tilde)
         masked_e_i = torch.multiply(alpha_e_i, e_i_tilde)
-        joint_repr = torch.cat((masked_v_i, masked_e_i),
+
+        cate_repr = F.relu(self.proj_cate_bn(self.proj_cate(cate)))
+
+        joint_repr = torch.cat((masked_v_i, masked_e_i, cate_repr),
                                dim=1)  # N, 2*dim_proj
 
         # Get class label prediction logits with final fully-connected layers

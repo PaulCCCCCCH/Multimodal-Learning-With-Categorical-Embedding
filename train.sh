@@ -1,4 +1,4 @@
-DEVICE="cuda:7"
+DEVICE="cuda"
 BATCH_SIZE="32"
 ENTRY='main.py'
 MAX_ITER=40
@@ -12,6 +12,6 @@ do
     python $ENTRY --model_name "text_only_$TASK" --mode text_only --task $TASK --batch_size 32 --device $DEVICE --max_iter $MAX_ITER
 
     # Combine them together
-    python $ENTRY --model_name "full_$TASK" --mode both --task $TASK --batch_size 20 --device $DEVICE --max_iter $MAX_ITER \
+    python $ENTRY --model_name "full_$TASK" --mode both --task $TASK --batch_size 15 --device $DEVICE --max_iter $MAX_ITER \
     --image_model_to_load "./output/image_only_$TASK/best.pt"  --text_model_to_load "./output/text_only_$TASK/best.pt"
 done

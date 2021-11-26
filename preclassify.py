@@ -77,12 +77,12 @@ if __name__ == '__main__':
     info_dict_train = build_category_dict(train_loader, categorizer)
     mean, std = get_stats(info_dict_train)
     normalize(info_dict_train, mean, std)
-    dump_file(info_dict_train, save_dir, 'info_dict_train.pkl')
+    dump_file(info_dict_train, save_dir, '{}_info_dict_train.pkl'.format(args.task))
 
     for phase in ['dev', 'test']:
         loader = get_data_loader(args, phase)
         info_dict = build_category_dict(loader, categorizer)
         normalize(info_dict, mean, std)
-        dump_file(info_dict, save_dir, 'info_dict_{}.pkl'.format(phase))
+        dump_file(info_dict, save_dir, '{}_info_dict_{}.pkl'.format(args.task, phase))
 
     # dump_file(info_dict)

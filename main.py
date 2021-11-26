@@ -8,7 +8,7 @@ from PIL.Image import SAVE
 from torch.serialization import save
 from args import get_args
 from trainer import Trainer
-from crisismmd_dataset import CrisisMMDataset, CrisisMMDatasetWithSSE
+from crisismmd_dataset import CrisisMMDataset
 from mm_models import DenseNetBertMMModel, ImageOnlyModel, TextOnlyModel
 import os
 import numpy as np
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     MODE = opt.mode
     TASK = opt.task
     MAX_ITER = opt.max_iter
-    OUTPUT_SIZE = None 
+    OUTPUT_SIZE = None
     if TASK == 'task1':
         OUTPUT_SIZE = 2
     elif TASK == 'task2':
@@ -54,8 +54,8 @@ if __name__ == '__main__':
     # The authors did not report the following values, but they tried
     # pv, pt in [10, 20000], and pv0, pt0 in [0, 1]
     WITH_SSE = opt.with_sse
-    pv = opt.pv # How many times more likely do we transit to the same class
-    pt = opt.pt 
+    pv = opt.pv  # How many times more likely do we transit to the same class
+    pt = opt.pt
     pv0 = opt.pv0  # Probability of not doing a transition
     pt0 = opt.pt0
 
@@ -70,10 +70,9 @@ if __name__ == '__main__':
     if not osp.exists(save_dir):
         os.mkdir(save_dir)
 
-
     # set logger
-    logging.basicConfig(filename=osp.join(save_dir, 'output_{}.log'.format(int(time.time()))), level=logging.INFO)
-
+    logging.basicConfig(filename=osp.join(
+        save_dir, 'output_{}.log'.format(int(time.time()))), level=logging.INFO)
 
     train_loader, dev_loader = None, None
     if not EVAL:
@@ -105,11 +104,14 @@ if __name__ == '__main__':
 
     loss_fn = nn.CrossEntropyLoss()
     if MODE == 'text_only':
-        model = TextOnlyModel(num_class=OUTPUT_SIZE, save_dir=save_dir).to(device)
+        model = TextOnlyModel(num_class=OUTPUT_SIZE,
+                              save_dir=save_dir).to(device)
     elif MODE == 'image_only':
-        model = ImageOnlyModel(num_class=OUTPUT_SIZE, save_dir=save_dir).to(device)
+        model = ImageOnlyModel(num_class=OUTPUT_SIZE,
+                               save_dir=save_dir).to(device)
     elif MODE == 'both':
-        model = DenseNetBertMMModel(num_class=OUTPUT_SIZE, save_dir=save_dir).to(device)
+        model = DenseNetBertMMModel(
+            num_class=OUTPUT_SIZE, save_dir=save_dir).to(device)
     else:
         raise NotImplemented
 

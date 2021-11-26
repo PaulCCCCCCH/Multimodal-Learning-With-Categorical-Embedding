@@ -34,7 +34,7 @@ class Trainer:
             self.label_key = 'label'
         elif mode == 'image_only':
             self.label_key = 'label_image'
-        elif mode =='text_only':
+        elif mode == 'text_only':
             self.label_key = 'label_text'
 
         if not eval and tensorboard:
@@ -61,7 +61,9 @@ class Trainer:
                 self.model.zero_grad()
 
                 x = (data['image'].to(self.device),
-                     {k: v.to(self.device) for k, v in data['text_tokens'].items()})
+                     {k: v.to(self.device)
+                      for k, v in data['text_tokens'].items()},
+                     data['category_vector'].to(self.device))
                 y = data[self.label_key].to(self.device)
 
                 # For mixed-precision training
@@ -105,7 +107,7 @@ class Trainer:
                     # logging.info("Correct: {}".format(display_correct))
                     # logging.info("Total: {}".format(display_total))
                     logging.info("Finished {} / {} batches with loss: {}, accuracy {}"
-                          .format(batch, len(self.train_loader), display_loss, display_acc))
+                                 .format(batch, len(self.train_loader), display_loss, display_acc))
                     total_batch = idx_iter * len(self.train_loader) + batch
 
                     if self.tensorboard:
@@ -118,7 +120,8 @@ class Trainer:
                     display_total = 0
                     display_total_loss = 0
 
-            logging.info("=============Iteration {}=============".format(idx_iter))
+            logging.info(
+                "=============Iteration {}=============".format(idx_iter))
             logging.info("Training accuracy {}".format(correct / total))
             logging.info("Avg Training loss {}".format(total_loss / total))
             logging.info("Saving model...")
@@ -133,7 +136,8 @@ class Trainer:
                 best_dev_loss = dev_loss
 
             self.scheduler.step(dev_loss)
-            logging.info("======================================\n".format(idx_iter))
+            logging.info(
+                "======================================\n".format(idx_iter))
 
         self.predict()
 
@@ -146,7 +150,9 @@ class Trainer:
         for data in self.dev_loader:
 
             x = (data['image'].to(self.device),
-                 {k: v.to(self.device) for k, v in data['text_tokens'].items()})
+                 {k: v.to(self.device)
+                  for k, v in data['text_tokens'].items()},
+                 data['category_vector'].to(self.device))
             y = data[self.label_key].to(self.device)
 
             logits = self.model(x)
@@ -174,7 +180,9 @@ class Trainer:
         for data in self.test_loader:
 
             x = (data['image'].to(self.device),
-                 {k: v.to(self.device) for k, v in data['text_tokens'].items()})
+                 {k: v.to(self.device)
+                  for k, v in data['text_tokens'].items()},
+                 data['category_vector'].to(self.device))
             y = data[self.label_key].to(self.device)
 
             logits = self.model(x)
