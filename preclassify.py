@@ -14,7 +14,7 @@ from tqdm import tqdm
 def get_data_loader(opt, phase):
     data_set = CrisisMMDataset()
     data_set.initialize(opt, phase=phase, cat='all',
-                        task=opt.task)
+                        task=opt.task, use_cate=False, no_transform=True)
     data_loader = DataLoader(
         data_set, batch_size=1, shuffle=True, num_workers=opt.num_workers)  # batch size is hardcoded to be 1
 

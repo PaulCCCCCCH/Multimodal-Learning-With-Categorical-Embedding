@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
     # The authors used factor=0.1, but did not mention other configs.
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, factor=0.1, patience=5, cooldown=0, verbose=True)
+        optimizer, factor=0.3, patience=4, cooldown=0, verbose=True)
 
     trainer = Trainer(train_loader, dev_loader, test_loader,
                       model, loss_fn, optimizer, scheduler, eval=EVAL, device=device, tensorboard=USE_TENSORBOARD, mode=MODE)

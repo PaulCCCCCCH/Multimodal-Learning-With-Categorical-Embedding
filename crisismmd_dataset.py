@@ -65,8 +65,9 @@ class CrisisMMDataset(BaseDataset):
         with open(ann_file, encoding='utf-8') as f:
             self.info = f.readlines()[1:]
 
-        with open(category_file, 'rb') as f:
-            category_dict = pickle.load(f)
+        if category_file is not None:
+            with open(category_file, 'rb') as f:
+                category_dict = pickle.load(f)
 
         self.data_list = []
 
@@ -92,7 +93,7 @@ class CrisisMMDataset(BaseDataset):
                     'label_text_str': label_text,
                     'label_text': self.label_map[label_text],
 
-                    'category_vector': category_dict[path_image].astype(np.float32)
+                    'category_vector': 1 if category_file is None else category_dict[path_image].astype(np.float32)
                 }
             )
 
@@ -101,7 +102,7 @@ class CrisisMMDataset(BaseDataset):
             sentence), padding='max_length', max_length=40, truncation=True).items()
         return {k: torch.tensor(v) for k, v in ids}
 
-    def initialize(self, opt, phase='train', cat='all', task='task2', shuffle=False, no_transform=False):
+    def initialize(self, opt, phase='train', cat='all', task='task2', shuffle=False, no_transform=False, use_cate=True):
         self.opt = opt
         self.shuffle = shuffle
 
@@ -130,7 +131,7 @@ class CrisisMMDataset(BaseDataset):
 
         category_file = '%s/%s_info_dict_%s.pkl' % (
             self.category_root, task_str, phase
-        )
+        ) if use_cate else None
 
         # Append list of data to self.data_list
         self.read_data(ann_file, category_file)
@@ -182,7 +183,6 @@ class CrisisMMDataset(BaseDataset):
             image = self.transforms(img)
         to_return['image'] = image
         return to_return
-
 
     def __len__(self):
         return len(self.data_list)
