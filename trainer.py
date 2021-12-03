@@ -11,7 +11,7 @@ import sys
 
 
 class Trainer:
-    def __init__(self, train_loader, dev_loader, test_loader, model: nn.Module, loss_fn, optimizer, scheduler, save_dir='.', display=100, eval=False, device='cuda', tensorboard=False, mode='both'):
+    def __init__(self, train_loader, dev_loader, test_loader, model: nn.Module, loss_fn, optimizer, scheduler, save_dir='.', display=100, eval=False, device='cuda', tensorboard=False, mode='both', use_cate=False):
 
         self.model = model
         self.loss_fn = loss_fn
@@ -28,6 +28,7 @@ class Trainer:
         self.eval = eval
 
         self.device = device
+        self.use_cate = use_cate
 
         self.tensorboard = tensorboard
         if mode == 'both':

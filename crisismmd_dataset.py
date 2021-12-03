@@ -76,6 +76,9 @@ class CrisisMMDataset(BaseDataset):
             event_name, tweet_id, image_id, tweet_text,	image,	label,	label_text,	label_image, label_text_image = l.split(
                 '\t')
 
+            if self.consistent_only and label_text != label_image:
+                continue
+
             path_image = '%s/%s' % (self.dataset_root, image)
             self.data_list.append(
                 {
@@ -102,7 +105,7 @@ class CrisisMMDataset(BaseDataset):
             sentence), padding='max_length', max_length=40, truncation=True).items()
         return {k: torch.tensor(v) for k, v in ids}
 
-    def initialize(self, opt, phase='train', cat='all', task='task2', shuffle=False, no_transform=False, use_cate=True):
+    def initialize(self, opt, phase='train', cat='all', task='task2', shuffle=False, no_transform=False, use_cate=True, consistent_only=False):
         self.opt = opt
         self.shuffle = shuffle
 
@@ -111,6 +114,7 @@ class CrisisMMDataset(BaseDataset):
         self.image_root = f'{self.dataset_root}/data_image'
         self.label_map = None
         self.no_transform = no_transform
+        self.consistent_only = consistent_only
         if task == 'task1':
             self.label_map = labels_task1
             task_str = task
@@ -147,7 +151,8 @@ class CrisisMMDataset(BaseDataset):
         self.normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         if self.no_transform:
             self.transforms = transforms.Compose([
-                transforms.Resize((opt.load_size, opt.load_size)),
+                transforms.Lambda(lambda img: expand2square(img)),
+                transforms.Resize((opt.crop_size, opt.crop_size)),
                 transforms.ToTensor(),
             ])
 
@@ -159,30 +164,35 @@ class CrisisMMDataset(BaseDataset):
                 transforms.Lambda(lambda img: expand2square(img)),
                 transforms.Resize((opt.load_size, opt.load_size)),
                 transforms.RandomHorizontalFlip(0.2),
-                transforms.RandomGrayscale(0.1),
-                transforms.RandomAffine(20),
+                # transforms.RandomGrayscale(0.1),
+                # transforms.RandomAffine(20),
                 transforms.RandomCrop((opt.crop_size, opt.crop_size)),
                 transforms.ToTensor(),
-                transforms.ColorJitter(
-                    brightness=0.01, contrast=0.01, saturation=0.01, hue=0.01),
+                # transforms.ColorJitter(
+                #     brightness=0.01, contrast=0.01, saturation=0.01, hue=0.01),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ])
 
     def __getitem__(self, index):
         data = self.data_list[index]
-        # if 'image' not in data:
-        #     with Image.open(data['path_image']).convert('RGB') as img:
-        #         image = self.transforms(img)
-        #     data['image'] = image
-        # return data
-        to_return = {}
-        for k, v in data.items():
-            to_return[k] = v
 
-        with Image.open(data['path_image']).convert('RGB') as img:
-            image = self.transforms(img)
-        to_return['image'] = image
-        return to_return
+        if self.no_transform:
+            # Pre-load images
+            if 'image' not in data:
+                with Image.open(data['path_image']).convert('RGB') as img:
+                    image = self.transforms(img)
+                data['image'] = image
+            return data
+
+        else:
+            to_return = {}
+            for k, v in data.items():
+                to_return[k] = v
+
+            with Image.open(data['path_image']).convert('RGB') as img:
+                image = self.transforms(img)
+            to_return['image'] = image
+            return to_return
 
     def __len__(self):
         return len(self.data_list)

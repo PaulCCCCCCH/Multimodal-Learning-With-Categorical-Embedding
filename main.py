@@ -9,7 +9,7 @@ from torch.serialization import save
 from args import get_args
 from trainer import Trainer
 from crisismmd_dataset import CrisisMMDataset
-from mm_models import DenseNetBertMMModel, ImageOnlyModel, TextOnlyModel
+from mm_models import DenseNetBertMMModel, DenseNetBertMMCateModel, ImageOnlyModel, TextOnlyModel, DenseNetBertMMModelSimpleConcat, DenseNetBertMMModelConcat4
 import os
 import numpy as np
 import torch
@@ -76,30 +76,25 @@ if __name__ == '__main__':
 
     train_loader, dev_loader = None, None
     if not EVAL:
-        if WITH_SSE:
-            train_set = CrisisMMDatasetWithSSE()
-            train_set.initialize(opt, pv, pt, pv0, pt0, phase='train', cat='all',
-                                 task=TASK)
-        else:
-            train_set = CrisisMMDataset()
-            train_set.initialize(opt, phase='train', cat='all',
-                                 task=TASK)
+        train_set = CrisisMMDataset()
+        train_set.initialize(opt, phase='train', cat='all',
+                             task=TASK, no_transform=opt.no_transform, consistent_only=opt.consistent_only)
         train_loader = DataLoader(
-            train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+            train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
 
     dev_set = CrisisMMDataset()
     dev_set.initialize(opt, phase='dev', cat='all',
-                       task=TASK)
+                       task=TASK, no_transform=True, consistent_only=opt.consistent_only)
 
     dev_loader = DataLoader(
-        dev_set, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+        dev_set, batch_size=batch_size, shuffle=False, num_workers=num_workers, drop_last=True)
 
     test_set = CrisisMMDataset()
     test_set.initialize(opt, phase='test', cat='all',
-                        task=TASK)
+                        task=TASK, no_transform=True, consistent_only=opt.consistent_only)
 
     test_loader = DataLoader(
-        test_set, batch_size=batch_size, shuffle=False, num_workers=num_workers
+        test_set, batch_size=batch_size, shuffle=False, num_workers=num_workers, drop_last=True
     )
 
     loss_fn = nn.CrossEntropyLoss()
@@ -110,8 +105,14 @@ if __name__ == '__main__':
         model = ImageOnlyModel(num_class=OUTPUT_SIZE,
                                save_dir=save_dir).to(device)
     elif MODE == 'both':
-        model = DenseNetBertMMModel(
-            num_class=OUTPUT_SIZE, save_dir=save_dir).to(device)
+        if opt.use_cate:
+            model = DenseNetBertMMCateModel(
+                num_class=OUTPUT_SIZE, save_dir=save_dir).to(device)
+        else:
+            model = DenseNetBertMMModel(
+                num_class=OUTPUT_SIZE, save_dir=save_dir).to(device)
+            # model = DenseNetBertMMModelConcat4(num_class=OUTPUT_SIZE, save_dir=save_dir).to(device)
+
     else:
         raise NotImplemented
 
@@ -123,7 +124,7 @@ if __name__ == '__main__':
         optimizer, factor=0.3, patience=4, cooldown=0, verbose=True)
 
     trainer = Trainer(train_loader, dev_loader, test_loader,
-                      model, loss_fn, optimizer, scheduler, eval=EVAL, device=device, tensorboard=USE_TENSORBOARD, mode=MODE)
+                      model, loss_fn, optimizer, scheduler, eval=EVAL, device=device, tensorboard=USE_TENSORBOARD, mode=MODE, use_cate=opt.use_cate)
 
     if model_to_load:
         model.load(model_to_load)

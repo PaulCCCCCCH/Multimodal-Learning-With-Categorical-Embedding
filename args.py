@@ -8,6 +8,8 @@ def get_args():
     parser.add_argument('--load_size', default=230, type=int)
     parser.add_argument('--crop_size', default=224, type=int)
     parser.add_argument('--max_dataset_size', default=2147483648, type=int)
+    parser.add_argument('--no_transform', action='store_true')
+    parser.add_argument('--consistent_only', action='store_true')
 
     # System configs
     parser.add_argument('--device', default='cuda')
@@ -16,10 +18,11 @@ def get_args():
     # -------------- Important configs --------------- #
     parser.add_argument('--mode', choices=['both', 'image_only', 'text_only'])
     parser.add_argument('--task', choices=['task1', 'task2', 'task2_merged'])
-    parser.add_argument('--learning_rate', default=2e-4, type=float)
+    parser.add_argument('--learning_rate', default=2e-3, type=float)
     parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--save_dir', default='./output', type=str)
     parser.add_argument('--model_name', default='', type=str)
+    parser.add_argument('--use_cate', action='store_true')
 
     parser.add_argument('--with_sse', action='store_true')
 

@@ -119,8 +119,8 @@ class Categorizer(BaseCategorizer):
         # TODO: Try more advanced criteria
         if group_count > self.max_group:
             # Too many groups have exactly the same color. Must be processed image
-            return False
-        return True
+            return np.array([0])
+        return np.array([1])
 
     def _get_feat_has_text(self, data):
         image_path = data['path_image'][0]
@@ -133,6 +133,8 @@ class Categorizer(BaseCategorizer):
             total = len(tokens)
 
             # TODO: Try more advanced criteria
-            if valid > 10 or valid > 0.5 * total:
-                return True
-        return False
+        #     if valid > 10 or valid > 0.5 * total:
+        #         return np.array([1])
+        # return np.array([0])
+            return np.array([valid])
+        return np.array([0])
