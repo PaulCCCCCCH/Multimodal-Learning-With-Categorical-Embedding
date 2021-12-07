@@ -47,7 +47,7 @@ if __name__ == '__main__':
     elif TASK == 'task2':
         OUTPUT_SIZE = 8
     elif TASK == 'task2_merged':
-        OUTPUT_SIZE = 6
+        OUTPUT_SIZE = 5
     else:
         raise NotImplemented
 
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     elif MODE == 'both':
         if opt.use_cate:
             model = DenseNetBertMMCateModel(
-                num_class=OUTPUT_SIZE, save_dir=save_dir).to(device)
+                num_class=OUTPUT_SIZE, save_dir=save_dir, dim_cate_repr=opt.cate_dim).to(device)
         else:
             model = DenseNetBertMMModel(
                 num_class=OUTPUT_SIZE, save_dir=save_dir).to(device)

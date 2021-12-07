@@ -4,7 +4,7 @@ from torch import nn
 from torch._C import dtype
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, precision_recall_fscore_support
 import logging
 import numpy as np
 import sys
@@ -176,6 +176,7 @@ class Trainer:
     def predict(self):
         self.model.eval()
         predictions = []
+        classes = []
         correct = 0
         total = 0
         for data in self.test_loader:
@@ -194,9 +195,15 @@ class Trainer:
 
             total += x[0].shape[0]
             predictions.extend([pred.item() for pred in indices])
+            classes.extend([label.item() for label in y])
             with open('prediction.csv', 'w') as f:
                 for pred in predictions:
                     f.write("{}\n".format(str(pred)))
         logging.info("Test set accuracy: {}".format(correct / total))
+
+        metrics = precision_recall_fscore_support(
+            classes, predictions, average='macro')
+        logging.info(
+            "Precision {}, recall: {}, fscore: {}".format(metrics[0], metrics[1], metrics[2]))
 
         return predictions

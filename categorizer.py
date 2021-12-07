@@ -16,7 +16,7 @@ class BaseCategorizer:
 
 class Categorizer(BaseCategorizer):
 
-    def __init__(self, pixel_group=100, min_color=5, max_group=12, cate_feat_dim=152):
+    def __init__(self, pixel_group=100, min_color=5, max_group=12, cate_feat_dim=152, select=None):
         # cate_feat_dim: Dimension of output category feature vector. 150 for semantic segmentation + 2 extra
 
         assert pixel_group > 0
@@ -25,6 +25,7 @@ class Categorizer(BaseCategorizer):
         self.min_color = min_color
         self.max_group = max_group
         self.cate_feat_dim = cate_feat_dim
+        self.select = select
 
         # Network Builders
         self.net_encoder = ModelBuilder.build_encoder(
@@ -55,16 +56,8 @@ class Categorizer(BaseCategorizer):
 
         """
         result = np.zeros(self.cate_feat_dim)
-        if self._get_feat_is_raw(data):
-            result[0] = 1
-        else:
-            result[0] = 0
-
-        if self._get_feat_has_text(data):
-            result[1] = 1
-        else:
-            result[1] = 0
-
+        result[0:1] = self._get_feat_is_raw(data)
+        result[1:2] = self._get_feat_has_text(data)
         result[2:] = self._get_feat_semantic_seg(data)
 
         return result
@@ -77,6 +70,7 @@ class Categorizer(BaseCategorizer):
 
         pred = torch.sum(seg_out, dim=(1, 2)).cpu().detach().numpy()
         # pred: (150) vector, not normalized
+        pred = pred[self.select]
         return pred
 
     def _get_feat_is_raw(self, data):
@@ -133,8 +127,8 @@ class Categorizer(BaseCategorizer):
             total = len(tokens)
 
             # TODO: Try more advanced criteria
-        #     if valid > 10 or valid > 0.5 * total:
-        #         return np.array([1])
-        # return np.array([0])
-            return np.array([valid])
+            if valid > 10 or valid > 0.5 * total:
+                return np.array([1])
         return np.array([0])
+        #     return np.array([valid])
+        # return np.array([0])

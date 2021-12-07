@@ -52,10 +52,10 @@ labels_task2_merged = {
     'not_humanitarian': 1,
     'other_relevant_information': 2,
     'rescue_volunteering_or_donation_effort': 3,
-    'vehicle_damage': 4,
-    'affected_individuals': 5,
-    'injured_or_dead_people': 5,
-    'missing_or_found_people': 5,
+    'vehicle_damage': 0,
+    'affected_individuals': 4,
+    'injured_or_dead_people': 4,
+    'missing_or_found_people': 4,
 }
 
 
@@ -105,11 +105,11 @@ class CrisisMMDataset(BaseDataset):
             sentence), padding='max_length', max_length=40, truncation=True).items()
         return {k: torch.tensor(v) for k, v in ids}
 
-    def initialize(self, opt, phase='train', cat='all', task='task2', shuffle=False, no_transform=False, use_cate=True, consistent_only=False):
+    def initialize(self, opt, phase='train', cat='all', task='task2', shuffle=False, no_transform=False, use_cate=True, consistent_only=False, category_root='CrisisMMD_extra'):
         self.opt = opt
         self.shuffle = shuffle
 
-        self.category_root = f'{dataroot}/CrisisMMD_extra'
+        self.category_root = f'{dataroot}/{category_root}'
         self.dataset_root = f'{dataroot}/CrisisMMD_v2.0_toy' if opt.debug else f'{dataroot}/CrisisMMD_v2.0'
         self.image_root = f'{self.dataset_root}/data_image'
         self.label_map = None
@@ -154,6 +154,7 @@ class CrisisMMDataset(BaseDataset):
                 transforms.Lambda(lambda img: expand2square(img)),
                 transforms.Resize((opt.crop_size, opt.crop_size)),
                 transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ])
 
         else:
@@ -199,3 +200,33 @@ class CrisisMMDataset(BaseDataset):
 
     def name(self):
         return 'CrisisMMDataset'
+
+
+if __name__ == '__main__':
+    from torch.utils.data import DataLoader
+
+    class Args:
+        pass
+
+    opt = Args()
+    opt.batch_size = 16
+    opt.max_dataset_size = 99999999
+    opt.crop_size = 224
+    opt.load_size = 330
+    opt.debug = False
+    opt.device = 'cuda'
+    # opt.task = 'task1'
+    opt.task = 'task2_merged'
+    opt.consistent_only = True
+    opt.num_classes = 2 if opt.task == 'task1' else 5
+
+    dataset = CrisisMMDataset()
+    dataset.initialize(opt, phase='dev', cat='all', task=opt.task,
+                       no_transform=False, use_cate=False, consistent_only=opt.consistent_only)
+    data_loader = DataLoader(
+        dataset, batch_size=opt.batch_size, shuffle=False,
+    )
+    len(data_loader)
+    for x in data_loader:
+        print(x)
+        break

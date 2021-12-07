@@ -23,6 +23,7 @@ def get_args():
     parser.add_argument('--save_dir', default='./output', type=str)
     parser.add_argument('--model_name', default='', type=str)
     parser.add_argument('--use_cate', action='store_true')
+    parser.add_argument('--cate_dim', type=int, default='152')
 
     parser.add_argument('--with_sse', action='store_true')
 
