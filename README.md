@@ -1,6 +1,7 @@
 # Multimodal Learning With Categorical Embedding
 
-Part of the idea for 11777 Group 3: Crisis Event Detection and Multimodal Image Classification
+Part of the idea for 11777 Group 3: Crisis Event Detection and Multimodal Image Classification.
+For the full project, please visit [this repository](https://github.com/yccyenchicheng/crisis_11777/tree/master).
 
 
 ## To run
